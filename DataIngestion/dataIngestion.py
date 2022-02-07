@@ -25,6 +25,7 @@ class DataIngestion:
         self.inputValidation.Filevalidation()
         self.inputValidation.columnValidation()
         session = self.dbOperations.DBConnection()
-        self.dbOperations.createTable(session)
+        self.dbOperations.LoadtoDB(session)
+        session.close()
 
         return 'done'

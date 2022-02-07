@@ -1,6 +1,7 @@
-from cassandra.cluster import Cluster
-from cassandra.auth import PlainTextAuthProvider
-from Utils import  Utils
+from Utils import Utils
+import sqlite3
+import os
+import pandas as pd
 
 
 class Database:
@@ -8,44 +9,23 @@ class Database:
         self.utils = Utils.utils()
 
     def DBConnection(self):
-        cloud_config = {
-            'secure_connect_bundle': 'secure-connect-test.zip'
-        }
-        auth_provider = PlainTextAuthProvider('iRlTdwqURolKnZaQrXstpvGW',
-                                              '+QKoyzZqnnZRc-5AZBpxqLn2AUz2AR+o.2YhCLgq00NPpqJl26vBbO0Y-qpODOUutDf-XagT9i4t_kWA3ppIIQIjX0aOBjTP8NNc+7+faYrNqUqDEbWiYgL7_dDQbTBv')
-        cluster = Cluster(cloud=cloud_config, auth_provider=auth_provider)
-        session = cluster.connect('test')
-        version = session.execute("select release_version from system.local").one()
-        print(version)
-
+        session = sqlite3.connect('db.sqlite3')
         return session
 
-    def createTable(self, session):
-        config = self.utils.mdm('schema_training.json')
-        names = list(config['ColName'].keys())
-        names = [''.join(i.replace('-', '_').split()) for i in names]
-        dtypes = list(config['ColName'].values())
-        res = [i + ' ' + j for i, j in zip(names, dtypes)]
-        schema = 'WaferId int,' + ','.join(res)+',primary key(WaferID)'
-        print(schema)
-        qry = 'create table IF NOT EXISTS Test.students ({}) WITH COMPACT STORAGE;'.format(schema)
-        print(qry)
-        session.execute(qry)
-
     def LoadtoDB(self, session):
-
-        query = session.prepare("insert into students (studentID, name, age, marks) values (?,?,?,?);")
-        for i in range(10):
-            session.execute(query, [i, 'Juhi', i * 10, 200])
+        goodData = 'Data/goodData'
+        self.utils.dircheck(goodData)
+        files = [i for i in os.listdir(goodData)]
+        dataframe = pd.read_csv(os.path.join(goodData, files[0]), index_col=0)
+        for file in files[1:]:
+            df = pd.read_csv(os.path.join(goodData, file), index_col=0)
+            dataframe = dataframe.append(df, ignore_index=True)
+        dataframe.to_sql('wafer', session, if_exists='replace')
 
     def LoadFromDB(self, session):
-        rows = session.execute("select * from students;")
+        rows = session.execute("select * from wafer;")
         return rows
 
     def dropTable(self, session):
-        query = 'DROP TABLE IF EXISTS  students'
+        query = 'DROP TABLE IF EXISTS  wafer'
         session.execute(query)
-
-
-
-
