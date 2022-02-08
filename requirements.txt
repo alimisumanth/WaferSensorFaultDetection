@@ -2,4 +2,4 @@ pandas
 django
 numpy
 cassandra-driver
-pyyaml
+scikit-learn

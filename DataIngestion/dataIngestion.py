@@ -1,7 +1,7 @@
 from DataPreProcessing import PreProcessing
 from Utils import Utils
 from InputValidation import InputValidation
-from databaseOperations import  databaseOperations
+from databaseOperations import databaseOperations
 import os
 import shutil
 
@@ -28,4 +28,8 @@ class DataIngestion:
         self.dbOperations.LoadtoDB(session)
         session.close()
 
-        return 'done'
+    def LoadFromDB(self):
+        session = self.dbOperations.DBConnection()
+        dataFrame = self.dbOperations.LoadFromDB(session)
+        session.close()
+        return dataFrame

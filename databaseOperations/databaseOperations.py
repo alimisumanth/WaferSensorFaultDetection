@@ -23,8 +23,8 @@ class Database:
         dataframe.to_sql('wafer', session, if_exists='replace')
 
     def LoadFromDB(self, session):
-        rows = session.execute("select * from wafer;")
-        return rows
+        df = pd.read_sql_query("select * from wafer", session)
+        return df
 
     def dropTable(self, session):
         query = 'DROP TABLE IF EXISTS  wafer'
