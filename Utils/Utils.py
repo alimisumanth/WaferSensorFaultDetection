@@ -1,14 +1,59 @@
+# -*- coding: utf-8 -*-
+
+"""
+=============================================================================
+Created on: 08-02-2022 11:23 PM
+Created by: ASK
+=============================================================================
+
+Project Name: WaferSensorFaultDetection
+
+File Name: Utils.py
+
+Description : This module contains general/common functions used in this project
+
+Version: 1.0
+
+Revision: None
+
+=============================================================================
+"""
+
 import os
 import json
 
 class utils:
+    """
+    common methods which are used in this project
+
+    Method:
+
+    dircheck(path):
+        Creates directories recursively
+    mdm(config_path):
+        reads and returns master data management file
+    """
     def __init__(self):
         pass
 
     def dircheck(self, path):
+        """
+        Creates directories recursively
+
+        :param path: path whose directory is to created
+
+        :return: None
+        """
         os.makedirs(path, exist_ok=True)
 
     def mdm(self, config_path):
+        """
+        Reads and return master data management file
+
+        :param config_path: path of the master data management file
+
+        :return: master data management file in dic format
+        """
         with open(config_path) as file:
                 config = json.load(file)
         return config
