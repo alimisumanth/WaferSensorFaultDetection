@@ -75,7 +75,7 @@ class Database:
         for file in files[1:]:
             df = pd.read_csv(os.path.join(goodData, file), index_col=0)
             dataframe = dataframe.append(df, ignore_index=True)
-        dataframe.to_sql('wafer', session, if_exists='replace')
+        dataframe.to_sql('wafer', session,index=False, if_exists='replace')
 
     def LoadFromDB(self, session):
         """

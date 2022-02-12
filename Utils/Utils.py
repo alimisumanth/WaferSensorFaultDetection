@@ -21,6 +21,8 @@ Revision: None
 
 import os
 import json
+import joblib
+import shutil
 
 class utils:
     """
@@ -34,7 +36,8 @@ class utils:
         reads and returns master data management file
     """
     def __init__(self):
-        pass
+        self.model_directory = 'models/'
+
 
     def dircheck(self, path):
         """
@@ -57,3 +60,14 @@ class utils:
         with open(config_path) as file:
                 config = json.load(file)
         return config
+
+    def savemodel(self,modelName,model):
+        self.path=os.path.join(self.model_directory,modelName)
+        if os.path.isdir(self.path):  # remove previously existing models for each clusters
+            shutil.rmtree(self.model_directory)
+            os.makedirs(self.path)
+        else:
+            os.makedirs(self.path)
+
+        joblib.dump(model, self.path+'/'+modelName+'.pkl')
+

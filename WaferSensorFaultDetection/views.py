@@ -4,6 +4,7 @@ import pandas as pd
 from DataIngestion import dataIngestion
 from DataPreProcessing import PreProcessing
 from django.views.decorators.csrf import csrf_exempt
+from MLAlgo import modeltuner
 
 
 @csrf_exempt
@@ -19,12 +20,17 @@ def train(request):
             imputed_data = preProcessing.KNNImputer(dataframe)
         else:
             imputed_data = dataframe
-        print(imputed_data.columns)
+
+
         features = imputed_data.drop('Good/Bad', axis=1)
         labels = imputed_data['Good/Bad']
         preProcessedData = preProcessing.zerovarcol(features)
-        print(labels.shape)
-        print(preProcessedData.shape)
+
+        tuner=modeltuner.modelTuner()
+        tuner.get_best_model(preProcessedData,labels)
+
+
+
         return HttpResponse('done')
 
 
