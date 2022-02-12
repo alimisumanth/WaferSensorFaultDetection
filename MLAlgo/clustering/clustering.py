@@ -48,9 +48,9 @@ class clustering:
         k_means = self.find_optimal_k(features)
         k = k_means.knee
         clusters=KMeans(n_clusters=k, init='k-means++', random_state=42)
-        clusters.fit_predict(features)
+        res=clusters.fit_predict(features)
         self.utils.savemodel("KMeans", clusters)
-        features['clusters'] = clusters
+        features['clusters'] = res
         return features
 
 
