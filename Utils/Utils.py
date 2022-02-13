@@ -61,8 +61,12 @@ class utils:
                 config = json.load(file)
         return config
 
-    def savemodel(self,modelName,model):
-        self.path=os.path.join(self.model_directory,modelName)
+    def savemodel(self,modelName, model, subdir=None):
+        if subdir is not None:
+            self.new_model_directory = os.path.join(self.model_directory, subdir)
+            self.path=os.path.join(self.new_model_directory, modelName)
+        else:
+            self.path = os.path.join(self.model_directory, modelName)
         if os.path.isdir(self.path):  # remove previously existing models for each clusters
             shutil.rmtree(self.model_directory)
             os.makedirs(self.path)
@@ -70,4 +74,14 @@ class utils:
             os.makedirs(self.path)
 
         joblib.dump(model, self.path+'/'+modelName+'.pkl')
+
+    def removedir(self, path):
+        shutil.rmtree(path)
+
+    def loadmodel(self,modelName):
+        self.path = os.path.join(self.model_directory, modelName)
+        model=joblib.load(self.path + '/' + modelName + '.pkl')
+        return model
+
+
 

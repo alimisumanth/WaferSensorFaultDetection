@@ -20,12 +20,12 @@ Revision:
 from kneed import KneeLocator
 from sklearn.cluster import KMeans
 from matplotlib import pyplot as plt
-from Utils import Utils
+from Utils.Utils import utils
 
 class clustering:
 
     def __init__(self):
-        self.utils = Utils.utils()
+        self.utils = utils()
 
     def find_optimal_k(self, features):
         wcss = []
@@ -49,9 +49,16 @@ class clustering:
         k = k_means.knee
         clusters=KMeans(n_clusters=k, init='k-means++', random_state=42)
         res=clusters.fit_predict(features)
-        self.utils.savemodel("KMeans", clusters)
+        self.utils.savemodel("KMeans", clusters, 'clustering')
         features['clusters'] = res
         return features
+
+    def getClusters(self, features):
+        kMeans = self.utils.loadmodel("KMeans")
+        clusters = kMeans.predict(features)
+        features['clusters'] = clusters
+        return features
+
 
 
 

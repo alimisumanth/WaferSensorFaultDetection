@@ -20,10 +20,13 @@ Revision:
 from sklearn.ensemble import  RandomForestClassifier
 from xgboost import XGBClassifier
 from sklearn.model_selection import GridSearchCV
+from Utils.Utils import utils
+
 
 class WaferClassification:
     def __init__(self):
-        pass
+        self.utils = utils()
+
     def RandomForestClassifier(self,x,y):
         """param_grid = {"n_estimators": [50, 100, 130], "criterion": ['gini', 'entropy'],
                       "max_depth": range(2, 4, 1), "max_features": ['auto', 'log2']}"""
@@ -47,7 +50,7 @@ class WaferClassification:
             'n_estimators': [10, 50]
 
         }
-        estimator=XGBClassifier(objective='binary:logistic')
+        estimator=XGBClassifier()
         XGB_GCV=GridSearchCV(estimator=estimator, param_grid=param_grid, cv=5,verbose=3)
         XGB_GCV.fit(x,y)
         learning_rate=XGB_GCV.best_params_['learning_rate']
@@ -56,6 +59,12 @@ class WaferClassification:
         XGB=XGBClassifier(learning_rate=learning_rate, max_depth=max_depth, n_estimators=n_estimators)
         XGB.fit(x,y)
         return XGB
+
+    def modelPredictor(self, modelName, features):
+        model=self.utils.loadmodel(modelName)
+        predictedData=model.predict(features)
+        return predictedData
+
 
 
 

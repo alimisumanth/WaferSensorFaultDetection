@@ -72,7 +72,7 @@ class inputValidation:
                 shutil.move(srcpath, GoodData, copy_function=shutil.copy)
             else:
                 shutil.move(srcpath, BadData, copy_function=shutil.copy)
-    def columnValidation(self):
+    def columnValidation(self,state):
         """
         It collects data from Data/goodData path and iterates over each file. For each file it checks number of
         columns in the file, data type of the columns. If they are not according to the data sharing agreement then
@@ -82,7 +82,10 @@ class inputValidation:
         """
         path = 'Data/goodData'
         BadData = 'Data/BadData'
-        configpath = 'schema_training.json'
+        if state=='train':
+            configpath = 'schema_training.json'
+        else:
+            configpath = 'schema_prediction.json'
         config = self.utils.mdm(configpath)
         for i in os.listdir(path):
             srcpath = os.path.join(path, i)

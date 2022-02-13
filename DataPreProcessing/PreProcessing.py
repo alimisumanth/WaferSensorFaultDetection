@@ -19,17 +19,19 @@ Revision: None
 =============================================================================
 """
 
-
 # importing required libraries
 import pandas as pd
 from sklearn.impute import KNNImputer
 from sklearn.feature_selection import VarianceThreshold
+from Utils import Utils
+
+
 
 class PreProcessing:
     """
         Data Preprocessing techniques
 
-        Attributes:None
+        Attributes:utils
 
         Methods:
 
@@ -43,8 +45,10 @@ class PreProcessing:
             drops columns with zero variance
 
     """
-    def __int__(self):
-        pass
+
+    def __init__(self):
+
+        self.utils = Utils.utils()
 
     def regexMatching(self):
         """
@@ -66,20 +70,29 @@ class PreProcessing:
         nullColumns = [(i, df[i].isnull().sum()) for i in df.columns if df[i].isnull().sum() > 0]
         return len(nullColumns) > 0
 
-    def KNNImputer(self, df):
+    def KNNImputer(self, df, state):
         """
         Imputes missing values using scikit-learn preprocessing module - KNNImputer method
 
+        :param state:
         :param df: A dataframe
 
         :return: Return a new dataframe whose null values are imputed by KNN Imputer
         """
-        cols = [i for i in df.columns if df[i].dtypes != 'object']
-        knn = KNNImputer()
-        new_df = pd.DataFrame(knn.fit_transform(df[cols]), columns=cols)
+        if state == 'train':
+            cols = [i for i in df.columns if df[i].dtypes != 'object']
+            knn = KNNImputer()
+            new_df = pd.DataFrame(knn.fit_transform(df[cols]), columns=cols)
+            self.utils.savemodel("KNNImputer", knn, 'Imputer')
+        elif state == 'predict':
+            knn = self.utils.loadmodel("KNNImputer")
+            new_df = knn.transform(df)
+        else:
+            pass
+
         return new_df
 
-    def zerovarcol(self, features):
+    def zerovarcol(self, features, state):
         """
         Drops the features whose values are constant or columns having zero variance.
 
@@ -87,18 +100,14 @@ class PreProcessing:
 
         :return: return features which are having non-zero variance
         """
-        vt = VarianceThreshold(threshold=0)
-        vt.fit(features)
-        zeroVarCols = [i for i in features.columns if i not in features.columns[vt.get_support()]]
-        features.drop(zeroVarCols, axis=1, inplace=True)
+        if state == 'train':
+            vt = VarianceThreshold(threshold=0)
+            vt.fit(features)
+            #self.utils.savemodel("VIF", vt)
+            zeroVarCols = [i for i in features.columns if i not in features.columns[vt.get_support()]]
+            features.drop(zeroVarCols, axis=1, inplace=True)
+        elif state == 'predict':
+            vif = self.utils.loadmodel("VIF")
+            features = vif.transform(features)
+
         return features
-
-
-
-
-
-
-
-
-
-

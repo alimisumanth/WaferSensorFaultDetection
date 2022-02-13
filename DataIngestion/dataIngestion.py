@@ -65,14 +65,14 @@ class DataIngestion:
             srcpath = os.path.join(path, i)
             shutil.copy(srcpath, rawdata)
 
-    def LoadToDB(self):
+    def LoadToDB(self,state='train'):
         """
         Transfers data into database
 
         :return: None
         """
         self.inputValidation.Filevalidation()
-        self.inputValidation.columnValidation()
+        self.inputValidation.columnValidation(state)
         session = self.dbOperations.DBConnection()
         self.dbOperations.LoadtoDB(session)
         session.close()
