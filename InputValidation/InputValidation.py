@@ -69,24 +69,28 @@ class inputValidation:
 
         Raises:
             OSError: system related errors including file I/O like file not found etc.
-            SameFileError: When source and destination fiels are same
+            SameFileError: When source and destination files are same
             Exception: raised for other errors
 
         """
 
         files = [i for i in os.listdir(self.rawdata) if i.endswith('.csv')]
+
+        # collecting regex for file name validation
         regex = self.preProcessing.regexMatching()
 
+        # Directory Creation
         self.utils.dircheck(self.goodData)
         self.utils.dircheck(self.badData)
-        for i in files:
-            srcPath = os.path.join(self.rawdata, i)
-            try:
 
-                if re.match(regex, i) is not None:
-                    shutil.move(srcPath, self.goodData, copy_function=shutil.copy)
+        # Iterating over files in rawData path
+        for i in files:
+            try:
+                srcPath = os.path.join(self.rawdata, i)
+                if re.match(regex, i) is not None:  # Regex matching with file name
+                    shutil.move(srcPath, self.goodData, copy_function=shutil.copy)  # Moving files to goodData path
                 else:
-                    shutil.move(srcPath, self.badData, copy_function=shutil.copy)
+                    shutil.move(srcPath, self.badData, copy_function=shutil.copy)  # Moving files to badData path
 
             # This exception is raised when a system function returns a system - related error.
             except OSError as error:
@@ -106,16 +110,39 @@ class inputValidation:
         columns in the file, data type of the columns. If they are not according to the data sharing agreement then
         they will be moved to badData folder.
 
-        :return: None
+        Returns: None
+
+        Raises:
+            OSError: system related errors including file I/O like file not found etc.
+            SameFileError: When source and destination files are same
+            Exception: raised for other errors
         """
 
+        # collecting configPath based on mode of validation train/prediction
         if state == 'train':
             self.configPath = 'schema_training.json'
         else:
             self.configPath = 'schema_prediction.json'
+
+        # Loading config file
         config = self.utils.mdm(self.configPath)
+
+        # Iterating over files in goodData path
         for i in os.listdir(self.goodData):
-            srcPath = os.path.join(self.goodData, i)
-            df = pd.read_csv(srcPath)
-            if len(df.columns) != config["NumberofColumns"]:
-                shutil.move(srcPath, self.badData, copy_function=shutil.copy)
+            try:
+                srcPath = os.path.join(self.goodData, i)
+                df = pd.read_csv(srcPath)
+                if len(df.columns) != config["NumberofColumns"]: # Check for number of columns
+                    shutil.move(srcPath, self.badData, copy_function=shutil.copy)
+
+            # This exception is raised when a system function returns a system - related error.
+            except OSError as error:
+                print(error)
+
+            # Exception if both source and destination files are same
+            except shutil.SameFileError:
+                print("Source and destination represents the same file.")
+
+            # For other errors
+            except Exception as e:
+                print("Error occurred while copying file.", e)
