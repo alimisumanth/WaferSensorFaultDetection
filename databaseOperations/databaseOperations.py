@@ -30,13 +30,15 @@ class Database:
     """
         Description: Database class contains various operations performed on sqlite database
 
-        Attributes: None
+        Attributes:
+            session: DB session object
+            goodData: Path to validated files folder
 
         Methods:
 
         DBConnection():
             Creates a new connection to the database
-        LoadtoDB(session):
+        LoadToDB(session):
             Loads data into database
         LoadFromDB(session):
             Loads data from database
@@ -52,26 +54,29 @@ class Database:
 
         self.utils = Utils.utils()
         self.session = None
-        self.goodData=''
+        self.goodData = 'Data/goodData'
 
     def DBConnection(self):
         """
         Creates a new sqlite database connection to db.sqlite3 database
         :return: sqlite object
         """
+        # creating a new database connection
         self.session = sqlite3.connect('db.sqlite3')
         return self.session
 
-    def LoadtoDB(self, session, state):
+    def LoadToDB(self, session, state):
         """
         Reads files in Data/goodData directory and generates a dataframe.
         Generated dataframe is stored in database which can be used later for further processing of data
 
-        :param session: sqlite database connection object
+        Args:
+         session: sqlite database connection object
 
         :return: None
+
         """
-        self.goodData = 'Data/goodData'
+
         self.utils.dircheck(self.goodData)
         files = [i for i in os.listdir(self.goodData)]
         dataframe = pd.read_csv(os.path.join(self.goodData, files[0]), index_col=0)
@@ -85,7 +90,7 @@ class Database:
 
     def LoadFromDB(self, session, state):
         """
-        Loads data from the database created using LoadtoDB method for further processing of data
+        Loads data from the database created using LoadToDB method for further processing of data
 
         :param session: sqlite database connection object
 

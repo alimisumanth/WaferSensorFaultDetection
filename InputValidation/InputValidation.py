@@ -110,6 +110,9 @@ class inputValidation:
         columns in the file, data type of the columns. If they are not according to the data sharing agreement then
         they will be moved to badData folder.
 
+        Args:
+            state: Mode of validation
+
         Returns: None
 
         Raises:

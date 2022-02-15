@@ -101,7 +101,7 @@ class DataIngestion:
             self.inputValidation.Filevalidation()
             self.inputValidation.columnValidation(state)
             session = self.dbOperations.DBConnection()
-            self.dbOperations.LoadtoDB(session, state)
+            self.dbOperations.LoadToDB(session, state)
             self.utils.removedir('Data/rawData')
             self.utils.removedir('Data/GoodData')
             session.close()
