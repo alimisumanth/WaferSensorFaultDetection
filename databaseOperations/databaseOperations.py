@@ -44,22 +44,25 @@ class Database:
             drops table from database
 
     """
+
     def __init__(self):
         """
             Constructor initializes Utils object
         """
 
         self.utils = Utils.utils()
+        self.session = None
+        self.goodData=''
 
     def DBConnection(self):
         """
         Creates a new sqlite database connection to db.sqlite3 database
         :return: sqlite object
         """
-        session = sqlite3.connect('db.sqlite3')
-        return session
+        self.session = sqlite3.connect('db.sqlite3')
+        return self.session
 
-    def LoadtoDB(self, session):
+    def LoadtoDB(self, session, state):
         """
         Reads files in Data/goodData directory and generates a dataframe.
         Generated dataframe is stored in database which can be used later for further processing of data
@@ -68,16 +71,19 @@ class Database:
 
         :return: None
         """
-        goodData = 'Data/goodData'
-        self.utils.dircheck(goodData)
-        files = [i for i in os.listdir(goodData)]
-        dataframe = pd.read_csv(os.path.join(goodData, files[0]), index_col=0)
+        self.goodData = 'Data/goodData'
+        self.utils.dircheck(self.goodData)
+        files = [i for i in os.listdir(self.goodData)]
+        dataframe = pd.read_csv(os.path.join(self.goodData, files[0]), index_col=0)
         for file in files[1:]:
-            df = pd.read_csv(os.path.join(goodData, file), index_col=0)
+            df = pd.read_csv(os.path.join(self.goodData, file), index_col=0)
             dataframe = dataframe.append(df, ignore_index=True)
-        dataframe.to_sql('wafer', session,index=False, if_exists='replace')
+        if state == 'train':
+            dataframe.to_sql('wafer_train', session, index=False, if_exists='replace')
+        elif state == 'predict':
+            dataframe.to_sql('wafer_predict', session, index=False, if_exists='replace')
 
-    def LoadFromDB(self, session):
+    def LoadFromDB(self, session, state):
         """
         Loads data from the database created using LoadtoDB method for further processing of data
 
@@ -85,7 +91,11 @@ class Database:
 
         :return: wafer data from database(dataframe)
         """
-        df = pd.read_sql_query("select * from wafer", session)
+        if state == 'train':
+            df = pd.read_sql_query("select * from wafer_train", session)
+        elif state == 'predict':
+            df = pd.read_sql_query("select * from wafer_predict", session)
+
         return df
 
     def dropTable(self, session):

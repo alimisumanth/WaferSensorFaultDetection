@@ -17,6 +17,7 @@ Revision: None
 
 =============================================================================
 """
+import pandas as pd
 from sklearn.model_selection import train_test_split
 from MLAlgo.clustering import clustering
 from MLAlgo.classification import classification
@@ -30,6 +31,8 @@ class modelTuner():
 
     """
     def __init__(self):
+        self.clusters = None
+        self.predicted_data=pd.DataFrame()
         self.clustering=clustering.clustering()
         self.classification=classification.WaferClassification()
         self.utils = Utils.utils()
@@ -61,18 +64,28 @@ class modelTuner():
             else:
                 self.utils.savemodel("XGBoost_"+str(i), xgb, 'classification')
     def findModels(self,cluster):
-        path='models/cluster'
-        models=[i for i in os.listdir(path) if os.path.isdir(i)]
-        print(models)
+        path='models/classification'
+        for i in os.listdir(path):
+            if os.path.isdir(path + '/' + i):
+                if int(i.split('_')[1]) == int(cluster):
+                    return i
 
-        self.utils.loadmodel()
 
     def predictData(self, features):
         self.clusters=self.clustering.getClusters(features)
+
         for i in features['clusters'].unique():
             cluster = features[features['clusters'] == i]
             cluster_features = cluster.drop(['clusters'], axis=1)
-            self.findModels(i)
+            ModelName=self.findModels(i)
+            model=self.utils.loadmodel(ModelName,'classification/'+ModelName)
+            output=model.predict(cluster_features)
+
+            cluster_features['prediction']=output
+            self.predicted_data = self.predicted_data.append(cluster_features, ignore_index=True)
+
+        return self.predicted_data
+
 
 
 

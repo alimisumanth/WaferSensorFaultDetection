@@ -85,8 +85,8 @@ class PreProcessing:
             new_df = pd.DataFrame(knn.fit_transform(df[cols]), columns=cols)
             self.utils.savemodel("KNNImputer", knn, 'Imputer')
         elif state == 'predict':
-            knn = self.utils.loadmodel("KNNImputer")
-            new_df = knn.transform(df)
+            knn = self.utils.loadmodel("KNNImputer",'Imputer/KNNImputer')
+            new_df = pd.DataFrame(knn.transform(df),columns=df.columns)
         else:
             pass
 
@@ -103,11 +103,12 @@ class PreProcessing:
         if state == 'train':
             vt = VarianceThreshold(threshold=0)
             vt.fit(features)
-            #self.utils.savemodel("VIF", vt)
+            self.utils.savemodel("VIF", vt)
             zeroVarCols = [i for i in features.columns if i not in features.columns[vt.get_support()]]
             features.drop(zeroVarCols, axis=1, inplace=True)
         elif state == 'predict':
             vif = self.utils.loadmodel("VIF")
-            features = vif.transform(features)
+            nonZeroVarCols = [i for i in features.columns if i in features.columns[vif.get_support()]]
+            features = pd.DataFrame(vif.transform(features),columns=nonZeroVarCols)
 
         return features

@@ -1,9 +1,8 @@
-from django.shortcuts import render, redirect
-from django.http import HttpResponse
 import pandas as pd
-from DataIngestion import dataIngestion
-from DataPreProcessing import PreProcessing
+from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
+from DataIngestion import DataIngestion
+from DataPreProcessing import PreProcessing
 from MLAlgo import modeltuner
 from Utils import Utils
 
@@ -11,45 +10,74 @@ from Utils import Utils
 @csrf_exempt
 def train(request):
     if request.method == "POST":
-        path = request.body.decode('ascii')
-        dataingestion = dataIngestion.DataIngestion()
-        dataingestion.rawDataLocal(path)
-        dataingestion.LoadToDB('train')
-        utils = Utils.utils()
-        utils.removedir('Data/rawData')
-        utils.removedir('Data/GoodData')
-        dataframe = dataingestion.LoadFromDB()
-        preProcessing = PreProcessing.PreProcessing()
-        features = dataframe.drop('Good/Bad', axis=1)
-        labels = dataframe['Good/Bad']
-        if preProcessing.nullValueCheck(features):
-            features = preProcessing.KNNImputer(features, 'train')
-        else:
-            features = dataframe
+        try:
+            path = request.body.decode('ascii')
+            # Creating instances for user defined modules
+            dataingestion = DataIngestion.DataIngestion()
+            preProcessing = PreProcessing.PreProcessing()
+            tuner = modeltuner.modelTuner()
 
-        preProcessedData = preProcessing.zerovarcol(features,'train')
+            # Copying raw data from Local path to project folder
+            dataingestion.rawDataLocal(path)
 
-        tuner = modeltuner.modelTuner()
-        tuner.get_best_model(preProcessedData, labels)
+            # Transferring data to database
+            dataingestion.LoadToDB('train')
 
-        return HttpResponse('done')
+            # Load data from database
+            dataframe = dataingestion.LoadFromDB('train')
 
+            # Splitting Features and labels
+            features = dataframe.drop('Good/Bad', axis=1)
+            labels = dataframe['Good/Bad']
+
+            # Null values Imputation
+            if preProcessing.nullValueCheck(features):
+                features = preProcessing.KNNImputer(features, 'train')
+
+            # Removing features with zero variance
+            preProcessedData = preProcessing.zerovarcol(features, 'train')
+
+            # Creating best performing model
+            tuner.get_best_model(preProcessedData, labels)
+
+            return HttpResponse('done')
+        except Exception as e:
+            print('Exception occurred during training phase:', e)
+
+
+@csrf_exempt
 def predict(request):
     if request.method == "POST":
         path = request.body.decode('ascii')
-        dataingestion = dataIngestion.DataIngestion()
-        dataingestion.rawDataLocal(path)
-        dataingestion.LoadToDB()
-        utils = Utils.utils()
-        utils.removedir('Data/rawData')
-        utils.removedir('Data/GoodData')
-        dataframe = dataingestion.LoadFromDB()
+
+        # Creating instances for user defined modules
+        dataingestion = DataIngestion.DataIngestion()
         preProcessing = PreProcessing.PreProcessing()
-        features = dataframe.drop('Good/Bad', axis=1)
-        labels = dataframe['Good/Bad']
-        if preProcessing.nullValueCheck(features):
-            features = preProcessing.KNNImputer(features,'predict')
-        else:
-            features = dataframe
         tuner = modeltuner.modelTuner()
-        tuner.findModels(features)
+        utils = Utils.utils()
+
+        # Copying raw data from Local path to project folder
+        dataingestion.rawDataLocal(path)
+
+        # Transferring data to database
+        dataingestion.LoadToDB('predict')
+
+        # Retrieving data from database
+        features = dataingestion.LoadFromDB('predict')
+
+        # Null value imputation
+        if preProcessing.nullValueCheck(features):
+            features = preProcessing.KNNImputer(features, 'predict')
+
+        # Removing features with null values
+        preProcessedData = pd.DataFrame(preProcessing.zerovarcol(features, 'predict'))
+
+        # Input data prediction
+        predicted_data = tuner.predictData(preProcessedData)
+
+        # Directory creation for saving output
+        utils.dircheck('output')
+
+        # Saving prediction results
+        predicted_data.to_csv('output/predicted_data.csv', index=False)
+        return HttpResponse('done')

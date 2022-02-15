@@ -54,7 +54,7 @@ class clustering:
         return features
 
     def getClusters(self, features):
-        kMeans = self.utils.loadmodel("KMeans")
+        kMeans = self.utils.loadmodel("KMeans", "clustering/KMeans")
         clusters = kMeans.predict(features)
         features['clusters'] = clusters
         return features

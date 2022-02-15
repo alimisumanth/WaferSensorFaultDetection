@@ -78,8 +78,11 @@ class utils:
     def removedir(self, path):
         shutil.rmtree(path)
 
-    def loadmodel(self,modelName):
-        self.path = os.path.join(self.model_directory, modelName)
+    def loadmodel(self,modelName,modelfolder=None):
+        if modelfolder is not None:
+            self.path = os.path.join(self.model_directory, modelfolder)
+        else:
+            self.path = os.path.join(self.model_directory, modelName)
         model=joblib.load(self.path + '/' + modelName + '.pkl')
         return model
 
