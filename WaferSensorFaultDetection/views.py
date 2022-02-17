@@ -76,7 +76,7 @@ def predict(request):
         predicted_data = tuner.predictData(preProcessedData)
 
         # Directory creation for saving output
-        utils.dircheck('output')
+        utils.dirCheck('output')
 
         # Saving prediction results
         predicted_data.to_csv('output/predicted_data.csv', index=False)

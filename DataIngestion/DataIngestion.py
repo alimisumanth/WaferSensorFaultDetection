@@ -41,9 +41,9 @@ class DataIngestion:
 
         rawDataLocal(path):
             Transfers data from local source to Data/rawData
-        LoadToDB():
+        insertIntoDB():
             Transfers data to Database
-        LoadFromDB():
+        retrieveFromDB():
             Transfers data from database
 
     """
@@ -59,10 +59,10 @@ class DataIngestion:
         """
         Transfers data for the path provided in argument to Data/rawData folder
 
-        parameters:
+        Args:
             path: Local folder path where files are available
 
-        return:
+        Returns:
             None
 
         Raises:
@@ -72,7 +72,7 @@ class DataIngestion:
         """
         try:
 
-            self.utils.dircheck(self.rawData)
+            self.utils.dirCheck(self.rawData)
             files = [i for i in os.listdir(path) if i.endswith('.csv')]
             for i in files:
                 srcPath = os.path.join(path, i)
@@ -94,28 +94,28 @@ class DataIngestion:
         """
         validation at file and column level and transfers data into database
 
-        :return: None
+        Returns: None
         """
         try:
 
             self.inputValidation.Filevalidation()
             self.inputValidation.columnValidation(state)
             session = self.dbOperations.DBConnection()
-            self.dbOperations.LoadToDB(session, state)
-            self.utils.removedir('Data/rawData')
-            self.utils.removedir('Data/GoodData')
+            self.dbOperations.insertIntoDB(session, state)
+            self.utils.removeDir('Data/rawData')
+            self.utils.removeDir('Data/GoodData')
             session.close()
 
         except Exception as e:
-            print('Loading to database failed')
+            print('Loading to database failed', str(e))
 
     def LoadFromDB(self, state):
         """
         Loads data from database
 
-        :return: dataframe
+        Returns: dataframe
         """
         session = self.dbOperations.DBConnection()
-        dataFrame = self.dbOperations.LoadFromDB(session, state)
+        dataFrame = self.dbOperations.retrieveFromDB(session, state)
         session.close()
         return dataFrame

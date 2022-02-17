@@ -80,8 +80,8 @@ class inputValidation:
         regex = self.preProcessing.regexMatching()
 
         # Directory Creation
-        self.utils.dircheck(self.goodData)
-        self.utils.dircheck(self.badData)
+        self.utils.dirCheck(self.goodData)
+        self.utils.dirCheck(self.badData)
 
         # Iterating over files in rawData path
         for i in files:

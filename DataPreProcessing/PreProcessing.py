@@ -26,7 +26,6 @@ from sklearn.feature_selection import VarianceThreshold
 from Utils import Utils
 
 
-
 class PreProcessing:
     """
         Data Preprocessing techniques
@@ -47,7 +46,7 @@ class PreProcessing:
     """
 
     def __init__(self):
-
+        self.regex = ''
         self.utils = Utils.utils()
 
     def regexMatching(self):
@@ -56,16 +55,16 @@ class PreProcessing:
 
         :return: regular expression(regex)
         """
-        regex = "['wafer'|'Wafer']+[\_]+(\d{8}\_)+(\d{6})+\.csv"
-        return regex
+        self.regex = "['wafer'|'Wafer']+[\_]+(\d{8}\_)+(\d{6})+\.csv"
+        return self.regex
 
     def nullValueCheck(self, df):
         """
         Checks for null values in dataframe
 
-        :param df: A dataframe
+        Args: df - A dataframe
 
-        :return: Boolean value: if number of null columns is greater than 0 return True else return False
+        Returns: Boolean value: if number of null columns is greater than 0 return True else return False
         """
         nullColumns = [(i, df[i].isnull().sum()) for i in df.columns if df[i].isnull().sum() > 0]
         return len(nullColumns) > 0
@@ -74,10 +73,11 @@ class PreProcessing:
         """
         Imputes missing values using scikit-learn preprocessing module - KNNImputer method
 
-        :param state:
-        :param df: A dataframe
+        Args
+          state: Mode of Imputation
+          df: A dataframe
 
-        :return: Return a new dataframe whose null values are imputed by KNN Imputer
+        Returns: Return a new dataframe whose null values are imputed by KNN Imputer
         """
         if state == 'train':
             cols = [i for i in df.columns if df[i].dtypes != 'object']
@@ -85,10 +85,10 @@ class PreProcessing:
             new_df = pd.DataFrame(knn.fit_transform(df[cols]), columns=cols)
             self.utils.savemodel("KNNImputer", knn, 'Imputer')
         elif state == 'predict':
-            knn = self.utils.loadmodel("KNNImputer",'Imputer/KNNImputer')
-            new_df = pd.DataFrame(knn.transform(df),columns=df.columns)
+            knn = self.utils.loadModel("KNNImputer", 'Imputer/KNNImputer')
+            new_df = pd.DataFrame(knn.transform(df), columns=df.columns)
         else:
-            pass
+            print('state is not defined')
 
         return new_df
 
@@ -96,9 +96,11 @@ class PreProcessing:
         """
         Drops the features whose values are constant or columns having zero variance.
 
-        :param features: list of features whose variance will be checked using VarianceThreshold method
+        Args:
+          features: list of features whose variance will be checked using VarianceThreshold method
+          state: Mode of selection
 
-        :return: return features which are having non-zero variance
+        Returns: return features which are having non-zero variance
         """
         if state == 'train':
             vt = VarianceThreshold(threshold=0)
@@ -107,8 +109,10 @@ class PreProcessing:
             zeroVarCols = [i for i in features.columns if i not in features.columns[vt.get_support()]]
             features.drop(zeroVarCols, axis=1, inplace=True)
         elif state == 'predict':
-            vif = self.utils.loadmodel("VIF")
-            nonZeroVarCols = [i for i in features.columns if i in features.columns[vif.get_support()]]
-            features = pd.DataFrame(vif.transform(features),columns=nonZeroVarCols)
-
+            try:
+                vif = self.utils.loadModel("VIF")
+                nonZeroVarCols = [i for i in features.columns if i in features.columns[vif.get_support()]]
+                features = pd.DataFrame(vif.transform(features), columns=nonZeroVarCols)
+            except Exception as e:
+                print("Exception occurred", str(e))
         return features

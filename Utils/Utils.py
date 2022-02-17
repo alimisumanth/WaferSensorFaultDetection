@@ -24,67 +24,121 @@ import json
 import joblib
 import shutil
 
+
 class utils:
     """
     common methods which are used in this project
 
     Method:
 
-    dircheck(path):
+      dirCheck(path):
         Creates directories recursively
-    mdm(config_path):
+      mdm(config_path):
         reads and returns master data management file
     """
+
     def __init__(self):
+        self.new_model_directory = None
+        self.path = None
         self.model_directory = 'models/'
+        self.config = ''
 
-
-    def dircheck(self, path):
+    def dirCheck(self, path):
         """
         Creates directories recursively
 
-        :param path: path whose directory is to created
+        Args
+         path: path whose directory is to created
 
-        :return: None
+        Returns: None
+
+        Raises:
+          OSError: os related error like permission denied
         """
-        os.makedirs(path, exist_ok=True)
+        try:
+            os.makedirs(path, exist_ok=True)
+        except OSError as e:
+            print('Permission denied', str(e))
+        except Exception as e:
+            print('Exception occurred', str(e))
 
     def mdm(self, config_path):
         """
         Reads and return master data management file
 
-        :param config_path: path of the master data management file
+        Args
+         config_path: path of the master data management file
 
-        :return: master data management file in dic format
+        Returns: master data management file in dic format
+
+        Raises:
+          OSError: Operating system errors
         """
-        with open(config_path) as file:
-                config = json.load(file)
-        return config
+        try:
+            with open(config_path) as file:
+                self.config = json.load(file)
+        except OSError as exception:
+            print(exception)
+        return self.config
 
-    def savemodel(self,modelName, model, subdir=None):
+    def savemodel(self, modelName, model, subdir=None):
+        """
+        Saves model for future processing
+
+        Args:
+            modelName: Name of the model to be saved
+            model: Model object
+            subdir: Name of the subdirectory
+
+        Returns:None
+
+        """
+
         if subdir is not None:
             self.new_model_directory = os.path.join(self.model_directory, subdir)
-            self.path=os.path.join(self.new_model_directory, modelName)
+            self.path = os.path.join(self.new_model_directory, modelName)
         else:
             self.path = os.path.join(self.model_directory, modelName)
-        if os.path.isdir(self.path):  # remove previously existing models for each clusters
-            shutil.rmtree(self.model_directory)
-            os.makedirs(self.path)
-        else:
-            os.makedirs(self.path)
+        try:
 
-        joblib.dump(model, self.path+'/'+modelName+'.pkl')
+            if os.path.isdir(self.path):  # remove previously existing models for each clusters
+                shutil.rmtree(self.model_directory)
+                os.makedirs(self.path)
+            else:
+                os.makedirs(self.path)
+        except Exception as e:
+            print(str(e))
 
-    def removedir(self, path):
+        joblib.dump(model, self.path + '/' + modelName + '.pkl')
+
+    def removeDir(self, path):
+        """
+        Removes a directory
+        Args:
+            path: Path of the directory to be removed
+
+        Returns: None
+
+        """
         shutil.rmtree(path)
 
-    def loadmodel(self,modelName,modelfolder=None):
-        if modelfolder is not None:
-            self.path = os.path.join(self.model_directory, modelfolder)
+    def loadModel(self, modelName, modelFolder=None):
+        """
+        Loads earlier saved model
+        Args:
+            modelName: Name of the model to be loaded
+            modelFolder: Folder of the mode where it is stored
+
+        Returns:
+            model: loaded model object
+
+        """
+        if modelFolder is not None:
+            self.path = os.path.join(self.model_directory, modelFolder)
         else:
             self.path = os.path.join(self.model_directory, modelName)
-        model=joblib.load(self.path + '/' + modelName + '.pkl')
+        try:
+            model = joblib.load(self.path + '/' + modelName + '.pkl')
+        except Exception as e:
+            print(str(e))
         return model
-
-
-
