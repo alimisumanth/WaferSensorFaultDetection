@@ -1,8 +1,8 @@
 pandas
 django
 numpy
-cassandra-driver
 scikit-learn
 jupyterlab
 xgboost
 kneed
+matplotlib
