@@ -40,6 +40,11 @@ class modelTuner:
     def __init__(self):
         self.features = None
         self.clusters = None
+        self.reports = None
+        self.params_path = None
+        self.scores_path = None
+        self.params = {}
+        self.scores = {}
         self.predicted_data = pd.DataFrame()
         self.clustering = clustering.clustering()
         self.classification = classification.WaferClassification()
@@ -58,13 +63,18 @@ class modelTuner:
         """
         self.features = self.clustering.KMeansAlgo(features)
         self.features['labels'] = labels
-
+        self.reports = self.utils.loadYaml()
+        self.params_path = self.reports['reports']['params']
+        self.scores_path = self.reports['reports']['scores']
+        self.utils.removeDir('reports')
+        self.utils.dirCheck('reports')
         for i in self.features['clusters'].unique():
             cluster = self.features[features['clusters'] == i]
             cluster_features = cluster.drop(['clusters', 'labels'], axis=1)
             cluster_label = cluster['labels']
             x_train, x_test, y_train, y_test = train_test_split(cluster_features, cluster_label, test_size=0.3)
-            xgb = self.classification.XgBoostClassifier(x_train, y_train)
+            xgb, XGParams = self.classification.XgBoostClassifier(x_train, y_train)
+
             y_predict = xgb.predict(x_test)
             # if there is only one label in y, then roc_auc_score returns error. We
             # will use accuracy in that case
@@ -72,7 +82,7 @@ class modelTuner:
                 xgb_score = accuracy_score(y_test, y_predict)
             else:
                 xgb_score = roc_auc_score(y_test, y_predict)
-            rf = self.classification.RandomForestClassifier(x_train, y_train)
+            rf, RFParams = self.classification.RandomForestClassifier(x_train, y_train)
             y_predict = rf.predict(x_test)
             # if there is only one label in y, then roc_auc_score returns error. We
             # will use accuracy in that case
@@ -82,8 +92,16 @@ class modelTuner:
                 rf_score = roc_auc_score(y_test, y_predict)
             if rf_score > xgb_score:
                 self.utils.savemodel("randomForest_" + str(i), rf, 'classification')
+                self.params['cluster_' + str(i)] = {'model': 'RandomForestClassifier', 'params_path': RFParams}
+                self.scores['cluster_' + str(i)] = {'model': 'RandomForestClassifier', 'score': rf_score}
+
             else:
                 self.utils.savemodel("XGBoost_" + str(i), xgb, 'classification')
+                self.params['cluster_' + str(i)] = {'model': 'XGBoostClassifier', 'params_path': XGParams}
+                self.scores['cluster_' + str(i)] = {'model': 'XGBoostClassifier', 'score': xgb_score}
+
+        self.utils.dumpData(self.scores_path, self.scores)
+        self.utils.dumpData(self.params_path, self.params)
 
     def findModels(self, cluster):
         """

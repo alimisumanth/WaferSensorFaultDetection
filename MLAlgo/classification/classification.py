@@ -25,6 +25,7 @@ from Utils.Utils import utils
 
 class WaferClassification:
     def __init__(self):
+        self.config = None
         self.n_estimators = None
         self.max_depth = None
         self.learning_rate = None
@@ -46,10 +47,19 @@ class WaferClassification:
             final_model: Return object of RandomForestClassifier
 
         """
-        # param_grid = {"n_estimators": [50, 100, 130], "criterion": ['gini', 'entropy'],
-        #              "max_depth": range(2, 4, 1), "max_features": ['auto', 'log2']}"""
-        self.param_grid = {"n_estimators": [50], "criterion": ['gini', 'entropy'],
-                           "max_depth": range(2, 3, 1), "max_features": ['auto']}
+
+        self.config = self.utils.loadYaml()
+
+
+        self.param_grid = {
+            "n_estimators": self.config['estimators']['RandomForestClassifier']['params']['n_estimators'],
+            "criterion": self.config['estimators']['RandomForestClassifier']['params']['criterion'],
+            "max_depth": self.config['estimators']['RandomForestClassifier']['params']['max_depth'],
+            "max_features": self.config['estimators']['RandomForestClassifier']['params']['max_features']
+        }
+
+
+
         self.estimator = RandomForestClassifier()
         self.model = GridSearchCV(estimator=self.estimator, param_grid=self.param_grid, n_jobs=-1, cv=5, verbose=3)
         self.model.fit(x, y)
@@ -60,8 +70,11 @@ class WaferClassification:
         final_model = RandomForestClassifier(n_estimators=n_estimators,
                                              criterion=criterion,
                                              max_depth=max_depth,
-                                             max_features=max_features).fit(x, y)
-        return final_model
+                                             max_features=max_features)
+        final_model.fit(x, y)
+
+        params = self.model.best_params_
+        return final_model, params
 
     def XgBoostClassifier(self, x, y):
         """
@@ -71,14 +84,18 @@ class WaferClassification:
             x: features
             y: labels
 
-        Returns: returns XGBoost classifier object
+        Returns:
+            XGB: XGBoost classifier object
+
 
         """
+        self.config = self.utils.loadYaml()
+
         self.param_grid = {
 
-            'learning_rate': [0.01, 0.001],
-            'max_depth': [5, 10],
-            'n_estimators': [10, 50]
+            'learning_rate': self.config['estimators']['XGBoostClassifier']['params']['learning_rate'],
+            'max_depth': self.config['estimators']['XGBoostClassifier']['params']['max_depth'],
+            'n_estimators': self.config['estimators']['XGBoostClassifier']['params']['n_estimators']
 
         }
         self.estimator = XGBClassifier()
@@ -87,9 +104,12 @@ class WaferClassification:
         self.learning_rate = XGB_GCV.best_params_['learning_rate']
         self.max_depth = XGB_GCV.best_params_['max_depth']
         self.n_estimators = XGB_GCV.best_params_['n_estimators']
-        XGB = XGBClassifier(learning_rate=self.learning_rate, max_depth=self.max_depth, n_estimators=self.n_estimators)
+
+        params = XGB_GCV.best_params_
+        XGB = XGBClassifier(learning_rate=self.learning_rate, max_depth=self.max_depth, n_estimators=self.n_estimators, eval_metric='mlogloss')
         XGB.fit(x, y)
-        return XGB
+
+        return XGB, params
 
     def modelPredictor(self, modelName, features):
         """

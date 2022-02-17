@@ -23,6 +23,7 @@ import os
 import json
 import joblib
 import shutil
+import yaml
 
 
 class utils:
@@ -42,6 +43,7 @@ class utils:
         self.path = None
         self.model_directory = 'models/'
         self.config = ''
+        self.configPath='params.yaml'
 
     def dirCheck(self, path):
         """
@@ -80,6 +82,21 @@ class utils:
         except OSError as exception:
             print(exception)
         return self.config
+
+    def loadYaml(self):
+        """
+        Loads params.yaml
+        Returns: yaml object
+
+        """
+        with open(self.configPath) as yaml_file:
+            config = yaml.safe_load(yaml_file)
+        return config
+
+    def dumpData(self, filename, data):
+        with open(filename, "a+") as f:
+            json.dump(data, f, indent=4)
+
 
     def savemodel(self, modelName, model, subdir=None):
         """
@@ -120,7 +137,8 @@ class utils:
         Returns: None
 
         """
-        shutil.rmtree(path)
+        if os.path.exists(path):
+            shutil.rmtree(path)
 
     def loadModel(self, modelName, modelFolder=None):
         """
