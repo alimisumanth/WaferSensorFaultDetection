@@ -21,6 +21,7 @@ Revision: None
 
 # importing required libraries
 from Utils import Utils
+from WaferLogging import WaferLogging
 import sqlite3
 import os
 import pandas as pd
@@ -32,7 +33,7 @@ class Database:
 
         Attributes:
             session: DB session object
-            goodData: Path to validated files folder
+            processedData: Path to validated files folder
 
         Methods:
 
@@ -54,8 +55,10 @@ class Database:
         """
 
         self.utils = Utils.utils()
+        self.waferLogger = WaferLogging.WaferLogging()
+        self.dbLogger = self.waferLogger.getLogger('dbLogger')
         self.session = None
-        self.goodData = 'Data/goodData'
+        self.processedData = 'Data/processedData'
 
     def DBConnection(self):
         """
@@ -65,15 +68,16 @@ class Database:
         """
         # creating a new database connection
         try:
+            self.dbLogger.info('Creating a Database connection')
             self.session = sqlite3.connect('db.sqlite3')
         except sqlite3.Error as e:
-            print('Exception occurred: ', str(e))
+            self.dbLogger.error('Exception occurred: ', str(e))
 
         return self.session
 
     def insertIntoDB(self, session, state):
         """
-        Reads files in Data/goodData directory and generates a dataframe.
+        Reads files in Data/processedData directory and generates a dataframe.
         Generated dataframe is stored in database which can be used later for further processing of data
 
         Args:
@@ -87,22 +91,27 @@ class Database:
         Returns: None
 
         """
+        self.dbLogger.info("Inserting processedData into database")
+        self.dbLogger.info("Inserting processedData into database")
+        self.utils.dirCheck(self.processedData)
 
-        self.utils.dirCheck(self.goodData)
-        files = [i for i in os.listdir(self.goodData)]
-        dataframe = pd.read_csv(os.path.join(self.goodData, files[0]), index_col=0)
+        files = [i for i in os.listdir(self.processedData)]
+        self.dbLogger.info("Iterating over files in processedData directory and "
+                           "appending its data to a dataframe")
+        dataframe = pd.read_csv(os.path.join(self.processedData, files[0]), index_col=0)
         for file in files[1:]:
-            df = pd.read_csv(os.path.join(self.goodData, file), index_col=0)
+            df = pd.read_csv(os.path.join(self.processedData, file), index_col=0)
             dataframe = dataframe.append(df, ignore_index=True)
         try:
-            if state == 'train':
+            if state == 'training':
+                self.dbLogger.info("processed data loaded to wafer_train table")
                 dataframe.to_sql('wafer_train', session, index=False, if_exists='replace')
-            elif state == 'predict':
+            elif state == 'prediction':
                 dataframe.to_sql('wafer_predict', session, index=False, if_exists='replace')
         except sqlite3.IntegrityError as e:
-            print('Unique constraint violate:', str(e))
+            self.dbLogger.error('Unique constraint violate:', str(e))
         except Exception as e:
-            print('Exception occurred:', str(e))
+            self.dbLogger.exception('Exception occurred:', str(e))
 
     def retrieveFromDB(self, session, state):
         """
@@ -114,13 +123,15 @@ class Database:
 
         Returns: wafer data from database(dataframe)
         """
+
         try:
-            if state == 'train':
+            if state == 'training':
+                self.dbLogger.info('Retrieving data from wafer_train table')
                 df = pd.read_sql_query("select * from wafer_train", session)
-            elif state == 'predict':
+            elif state == 'prediction':
                 df = pd.read_sql_query("select * from wafer_predict", session)
         except Exception as e:
-            print('Exception occurred:', str(e))
+            self.dbLogger.exception('Exception occurred:', str(e))
 
         return df
 
@@ -133,7 +144,8 @@ class Database:
         Returns: None
         """
         try:
+            self.dbLogger.info('dropping wafer_train table')
             query = 'DROP TABLE IF EXISTS  wafer'
             session.execute(query)
         except Exception as e:
-            print('Exception occurred', str(e))
+            self.dbLogger.exception('Exception occurred', str(e))

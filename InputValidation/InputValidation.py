@@ -22,6 +22,7 @@ Revision: None
 # importing required libraries
 
 from DataPreProcessing import PreProcessing
+from WaferLogging import WaferLogging
 from Utils import Utils
 import os
 import re
@@ -37,26 +38,28 @@ class inputValidation:
     Attributes:
         configPath: Data sharing agreement files used for training and prediction
         rawData:    Path where raw data files are stored
-        goodData:   path where validated files are stored
-        badData:    Path where corrupted files are stored
+        processedData:   path where validated files are stored
+        corruptedData:    Path where corrupted files are stored
 
     Methods:
     Filevalidation():
         it collects data from Data/rawData path and iterates over each file and compares if file name
         is matching with regular expression.
     columnValidation():
-         It collects data from Data/goodData path and iterates over each file and checks if the number of columns
+         It collects data from Data/processedData path and iterates over each file and checks if the number of columns
          and date type of columns matches according to the data sharing agreement or not
 
     """
 
     def __init__(self):
+        self.configPath = ''
+        self.processedData = 'Data/processedData'
+        self.corruptedData = 'Data/corruptedData'
+        self.rawdata = 'Data/rawData'
         self.preProcessing = PreProcessing.PreProcessing()
         self.utils = Utils.utils()
-        self.configPath = ''
-        self.goodData = 'Data/goodData'
-        self.badData = 'Data/BadData'
-        self.rawdata = 'Data/rawData'
+        self.waferLogger = WaferLogging.WaferLogging()
+        self.inputValLogger = self.waferLogger.getLogger('inputValidation')
 
     def Filevalidation(self):
         """
@@ -73,42 +76,54 @@ class inputValidation:
             Exception: raised for other errors
 
         """
-
+        self.inputValLogger.info('File validation started')
+        self.inputValLogger.info('Filtering files ends with csv format')
         files = [i for i in os.listdir(self.rawdata) if i.endswith('.csv')]
 
+        self.inputValLogger.info('get file name regex')
         # collecting regex for file name validation
         regex = self.preProcessing.regexMatching()
 
         # Directory Creation
-        self.utils.dirCheck(self.goodData)
-        self.utils.dirCheck(self.badData)
+        self.inputValLogger.info('Create preProcessedData directory if not exists')
+        self.utils.dirCheck(self.processedData)
+        self.inputValLogger.info('Create corruptedData directory if not exists')
+        self.utils.dirCheck(self.corruptedData)
 
+        self.inputValLogger.info('Iterating over files in raw data directory')
         # Iterating over files in rawData path
         for i in files:
             try:
                 srcPath = os.path.join(self.rawdata, i)
                 if re.match(regex, i) is not None:  # Regex matching with file name
-                    shutil.move(srcPath, self.goodData, copy_function=shutil.copy)  # Moving files to goodData path
+                    shutil.move(srcPath, self.processedData, copy_function=shutil.copy)  # Moving files to
+                    # processedData path
+                    self.inputValLogger.info('moving '+i+'from '+'rawData directory to processedData directory')
                 else:
-                    shutil.move(srcPath, self.badData, copy_function=shutil.copy)  # Moving files to badData path
+                    shutil.move(srcPath, self.corruptedData, copy_function=shutil.copy)  # Moving files to
+                    # corruptedData path
+                    self.inputValLogger.info('File name not matching, moving ' + i + 'from ' + 'rawData directory to '
+                                                                                               'corruptedData '
+                                                                                               'directory')
 
             # This exception is raised when a system function returns a system - related error.
             except OSError as error:
-                print(error)
+                self.inputValLogger.error(error)
 
             # Exception if both source and destination files are same
             except shutil.SameFileError:
-                print("Source and destination represents the same file.")
+                self.inputValLogger.error("Source and destination represents the same file.")
 
             # For other errors
             except Exception as e:
-                print("Error occurred while copying file.", e)
+                self.inputValLogger.exception("Error occurred while copying file.", e)
+        self.inputValLogger.info('File validation completed')
 
     def columnValidation(self, state):
         """
-        It collects data from Data/goodData path and iterates over each file. For each file it checks number of
+        It collects data from Data/processedData path and iterates over each file. For each file it checks number of
         columns in the file, data type of the columns. If they are not according to the data sharing agreement then
-        they will be moved to badData folder.
+        they will be moved to corruptedData folder.
 
         Args:
             state: Mode of validation
@@ -120,32 +135,34 @@ class inputValidation:
             SameFileError: When source and destination files are same
             Exception: raised for other errors
         """
-
+        self.inputValLogger.info('columnValidation started')
         # collecting configPath based on mode of validation train/prediction
-        if state == 'train':
+        if state == 'training':
             self.configPath = 'schema_training.json'
         else:
             self.configPath = 'schema_prediction.json'
-
+        self.inputValLogger.info('Loading master data management file')
         # Loading config file
         config = self.utils.mdm(self.configPath)
 
-        # Iterating over files in goodData path
-        for i in os.listdir(self.goodData):
+        self.inputValLogger.info('Iterating over files from processedData folder')
+        # Iterating over files in processedData path
+        for i in os.listdir(self.processedData):
             try:
-                srcPath = os.path.join(self.goodData, i)
+                srcPath = os.path.join(self.processedData, i)
                 df = pd.read_csv(srcPath)
                 if len(df.columns) != config["NumberofColumns"]: # Check for number of columns
-                    shutil.move(srcPath, self.badData, copy_function=shutil.copy)
+                    self.inputValLogger.info('Number of columns are not matching, moving '+i+' to corruptedData folder')
+                    shutil.move(srcPath, self.corruptedData, copy_function=shutil.copy)
 
             # This exception is raised when a system function returns a system - related error.
             except OSError as error:
-                print(error)
+                self.inputValLogger.error(error)
 
             # Exception if both source and destination files are same
             except shutil.SameFileError:
-                print("Source and destination represents the same file.")
+                self.inputValLogger.error("Source and destination represents the same file.")
 
             # For other errors
             except Exception as e:
-                print("Error occurred while copying file.", e)
+                self.inputValLogger.exception("Error occurred while copying file.", e)

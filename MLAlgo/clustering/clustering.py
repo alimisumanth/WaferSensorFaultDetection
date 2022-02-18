@@ -50,8 +50,7 @@ class clustering:
         plt.title('The Elbow Method')
         plt.xlabel('Number of clusters')
         plt.ylabel('WCSS')
-        # plt.show()
-        plt.savefig('K-Means_Elbow.PNG')  # saving the elbow plot locally
+        plt.savefig('reports/K-Means_Elbow.PNG')  # saving the elbow plot locally
         # finding the value of the optimum cluster programmatically
         knn = KneeLocator(range(1, 11), self.wcss, curve='convex', direction='decreasing')
         return knn

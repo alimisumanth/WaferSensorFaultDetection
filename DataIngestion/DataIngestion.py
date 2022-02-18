@@ -25,6 +25,7 @@ from DataPreProcessing import PreProcessing
 from Utils import Utils
 from InputValidation import InputValidation
 from databaseOperations import databaseOperations
+from WaferLogging import  WaferLogging
 import os
 import shutil
 
@@ -54,6 +55,9 @@ class DataIngestion:
         self.utils = Utils.utils()
         self.inputValidation = InputValidation.inputValidation()
         self.dbOperations = databaseOperations.Database()
+        self.waferLogging = WaferLogging.WaferLogging()
+        self.dataIngestionLogger = self.waferLogging.getLogger('dataIngesion')
+
 
     def rawDataLocal(self, path):
         """
@@ -70,25 +74,30 @@ class DataIngestion:
             PermissionError: If permission is denied for copying file
             Exception: If any other exception
         """
+        self.dataIngestionLogger.info('Raw data copying to local path')
         try:
-
+            self.dataIngestionLogger.info('Creating a raw data directory if not exists')
             self.utils.dirCheck(self.rawData)
+            self.dataIngestionLogger.info('Filtering data files')
             files = [i for i in os.listdir(path) if i.endswith('.csv')]
+            self.dataIngestionLogger.info('File copying started')
             for i in files:
                 srcPath = os.path.join(path, i)
+                self.dataIngestionLogger.info(i+" copied to "+str(self.rawData))
                 shutil.copy(srcPath, self.rawData)
+            self.dataIngestionLogger.info('File copying completed')
 
         # Exception if both source and destination files are same
         except shutil.SameFileError:
-            print("Source and destination represents the same file.")
+            self.dataIngestionLogger.error("Source and destination represents the same file.")
 
         # If permission is denied for copying file
         except PermissionError:
-            print("Permission denied.")
+            self.dataIngestionLogger.error("Permission denied.")
 
         # For other errors
         except Exception as e:
-            print("Error occurred while copying file.", e)
+            self.dataIngestionLogger.exception("Error occurred while copying file.", e)
 
     def LoadToDB(self, state):
         """
@@ -96,18 +105,30 @@ class DataIngestion:
 
         Returns: None
         """
+        self.dataIngestionLogger.info('Loading data into database')
+        self.dataIngestionLogger.handlers.close()
+        training = self.waferLogging.getLogger('trainingPhase')
         try:
-
+            training.info('File validation started')
             self.inputValidation.Filevalidation()
+            training.info('File validation ended')
+            training.info('Column validation started')
             self.inputValidation.columnValidation(state)
+            training.info('Column validation ended')
             session = self.dbOperations.DBConnection()
+            training.info('Data Insertion into  database started')
             self.dbOperations.insertIntoDB(session, state)
+            training.info('Data Insertion into  database ended')
+            training.info('Raw data folder removed')
             self.utils.removeDir('Data/rawData')
-            self.utils.removeDir('Data/GoodData')
+            training.info('Processed data folder removed')
+            self.utils.removeDir('Data/processedData')
             session.close()
-
+            training.handlers.close()
+            self.dataIngestionLogger = self.waferLogging.getLogger('dataIngesion')
+            self.dataIngestionLogger.info('Loading data into database completed')
         except Exception as e:
-            print('Loading to database failed', str(e))
+            training.exception(e)
 
     def LoadFromDB(self, state):
         """
@@ -115,7 +136,9 @@ class DataIngestion:
 
         Returns: dataframe
         """
+        self.dataIngestionLogger.info('Loading data from database started')
         session = self.dbOperations.DBConnection()
         dataFrame = self.dbOperations.retrieveFromDB(session, state)
+        self.dataIngestionLogger.info('Loading data into database ended')
         session.close()
         return dataFrame

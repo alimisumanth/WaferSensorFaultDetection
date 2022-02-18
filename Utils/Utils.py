@@ -43,7 +43,7 @@ class utils:
         self.path = None
         self.model_directory = 'models/'
         self.config = ''
-        self.configPath='params.yaml'
+        self.configPath = 'params.yaml'
 
     def dirCheck(self, path):
         """

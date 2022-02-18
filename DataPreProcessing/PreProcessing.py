@@ -79,12 +79,12 @@ class PreProcessing:
 
         Returns: Return a new dataframe whose null values are imputed by KNN Imputer
         """
-        if state == 'train':
+        if state == 'training':
             cols = [i for i in df.columns if df[i].dtypes != 'object']
             knn = KNNImputer()
             new_df = pd.DataFrame(knn.fit_transform(df[cols]), columns=cols)
             self.utils.savemodel("KNNImputer", knn, 'Imputer')
-        elif state == 'predict':
+        elif state == 'prediction':
             knn = self.utils.loadModel("KNNImputer", 'Imputer/KNNImputer')
             new_df = pd.DataFrame(knn.transform(df), columns=df.columns)
         else:
@@ -102,13 +102,13 @@ class PreProcessing:
 
         Returns: return features which are having non-zero variance
         """
-        if state == 'train':
+        if state == 'training':
             vt = VarianceThreshold(threshold=0)
             vt.fit(features)
             self.utils.savemodel("VIF", vt)
             zeroVarCols = [i for i in features.columns if i not in features.columns[vt.get_support()]]
             features.drop(zeroVarCols, axis=1, inplace=True)
-        elif state == 'predict':
+        elif state == 'prediction':
             try:
                 vif = self.utils.loadModel("VIF")
                 nonZeroVarCols = [i for i in features.columns if i in features.columns[vif.get_support()]]
