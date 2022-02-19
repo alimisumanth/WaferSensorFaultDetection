@@ -24,16 +24,19 @@ def train(request):
             logger.info('Raw data copying to local path started')
             # Copying raw data from Local path to project folder
             dataingestion.rawDataLocal(path)
+            logger = WaferLogger.getLogger('trainingPhase')
             logger.info('Raw data copying to local path ended')
 
             logger.info('Data Transmission phase from Local to Database started')
             # Transferring data to database
             dataingestion.LoadToDB('train')
+            logger = WaferLogger.getLogger('trainingPhase')
             logger.info('Data Transmission phase from Local to Database ended')
 
             logger.info('Data retrieval phase from database to Local started')
             # Load data from database
             dataframe = dataingestion.LoadFromDB('training')
+            logger = WaferLogger.getLogger('trainingPhase')
             logger.info('Data retrieval phase from database to Local ended')
 
             # Splitting Features and labels
@@ -74,7 +77,7 @@ def predict(request):
         dataingestion.rawDataLocal(path)
 
         # Transferring data to database
-        dataingestion.LoadToDB('predict')
+        dataingestion.LoadToDB('predict', None)
 
         # Retrieving data from database
         features = dataingestion.LoadFromDB('prediction')

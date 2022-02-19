@@ -54,9 +54,10 @@ class Database:
                 Utils object
         """
 
+        self.dbLogger = None
         self.utils = Utils.utils()
         self.waferLogger = WaferLogging.WaferLogging()
-        self.dbLogger = self.waferLogger.getLogger('dbLogger')
+
         self.session = None
         self.processedData = 'Data/processedData'
 
@@ -67,6 +68,7 @@ class Database:
         Raises: sqlite3 error
         """
         # creating a new database connection
+        self.dbLogger = self.waferLogger.getLogger('dbLogger')
         try:
             self.dbLogger.info('Creating a Database connection')
             self.session = sqlite3.connect('db.sqlite3')
@@ -91,6 +93,7 @@ class Database:
         Returns: None
 
         """
+        self.dbLogger = self.waferLogger.getLogger('dbLogger')
         self.dbLogger.info("Inserting processedData into database")
         self.dbLogger.info("Inserting processedData into database")
         self.utils.dirCheck(self.processedData)
@@ -123,7 +126,7 @@ class Database:
 
         Returns: wafer data from database(dataframe)
         """
-
+        self.dbLogger = self.waferLogger.getLogger('dbLogger')
         try:
             if state == 'training':
                 self.dbLogger.info('Retrieving data from wafer_train table')

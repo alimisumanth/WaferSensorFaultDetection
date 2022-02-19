@@ -33,7 +33,7 @@ class WaferLogging:
 
     def getLogger(self, name):
         self.utils.dirCheck('logs')
-        self.log_cfg['handlers']['info_file_handler']['filename'] = 'logs/' + name + '.log'
+        self.log_cfg['handlers']['waferInfo']['filename'] = 'logs/' + name + '.log'
         logging.config.dictConfig(self.log_cfg)
         logger = logging.getLogger('Wafer')
         return logger

@@ -24,7 +24,7 @@ import pandas as pd
 from sklearn.impute import KNNImputer
 from sklearn.feature_selection import VarianceThreshold
 from Utils import Utils
-
+from WaferLogging import WaferLogging
 
 class PreProcessing:
     """
@@ -48,6 +48,7 @@ class PreProcessing:
     def __init__(self):
         self.regex = ''
         self.utils = Utils.utils()
+        self.waferLogger = WaferLogging.WaferLogging()
 
     def regexMatching(self):
         """
@@ -55,7 +56,9 @@ class PreProcessing:
 
         :return: regular expression(regex)
         """
+        logger = self.waferLogger.getLogger('preProcessing')
         self.regex = "['wafer'|'Wafer']+[\_]+(\d{8}\_)+(\d{6})+\.csv"
+        logger.info('file name regex: '+self.regex)
         return self.regex
 
     def nullValueCheck(self, df):

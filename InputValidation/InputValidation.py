@@ -52,6 +52,7 @@ class inputValidation:
     """
 
     def __init__(self):
+        self.inputValLogger = None
         self.configPath = ''
         self.processedData = 'Data/processedData'
         self.corruptedData = 'Data/corruptedData'
@@ -59,7 +60,7 @@ class inputValidation:
         self.preProcessing = PreProcessing.PreProcessing()
         self.utils = Utils.utils()
         self.waferLogger = WaferLogging.WaferLogging()
-        self.inputValLogger = self.waferLogger.getLogger('inputValidation')
+
 
     def Filevalidation(self):
         """
@@ -76,6 +77,7 @@ class inputValidation:
             Exception: raised for other errors
 
         """
+        self.inputValLogger = self.waferLogger.getLogger('inputValidation')
         self.inputValLogger.info('File validation started')
         self.inputValLogger.info('Filtering files ends with csv format')
         files = [i for i in os.listdir(self.rawdata) if i.endswith('.csv')]
@@ -83,7 +85,7 @@ class inputValidation:
         self.inputValLogger.info('get file name regex')
         # collecting regex for file name validation
         regex = self.preProcessing.regexMatching()
-
+        self.inputValLogger = self.waferLogger.getLogger('inputValidation')
         # Directory Creation
         self.inputValLogger.info('Create preProcessedData directory if not exists')
         self.utils.dirCheck(self.processedData)
@@ -135,6 +137,7 @@ class inputValidation:
             SameFileError: When source and destination files are same
             Exception: raised for other errors
         """
+        self.inputValLogger = self.waferLogger.getLogger('inputValidation')
         self.inputValLogger.info('columnValidation started')
         # collecting configPath based on mode of validation train/prediction
         if state == 'training':

@@ -3,16 +3,16 @@ formatters:
   simple:
     format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 handlers:
-  info_file_handler:
+  waferInfo:
     class: logging.handlers.RotatingFileHandler
     level: INFO
     formatter: simple
-    filename: logs/info.log
+    filename: logs/trainingPhase.log
 loggers:
   Wafer:
     level: DEBUG
-    handlers: [info_file_handler]
+    handlers: [waferInfo]
     propagate: no
 root:
   level: DEBUG
-  handlers: [info_file_handler]
+  handlers: [waferInfo]

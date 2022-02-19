@@ -25,7 +25,7 @@ from DataPreProcessing import PreProcessing
 from Utils import Utils
 from InputValidation import InputValidation
 from databaseOperations import databaseOperations
-from WaferLogging import  WaferLogging
+from WaferLogging import WaferLogging
 import os
 import shutil
 
@@ -50,14 +50,13 @@ class DataIngestion:
     """
 
     def __init__(self):
+        self.dataIngestionLogger = None
         self.rawData = 'Data/rawData'
         self.preprocessing = PreProcessing.PreProcessing()
         self.utils = Utils.utils()
         self.inputValidation = InputValidation.inputValidation()
         self.dbOperations = databaseOperations.Database()
         self.waferLogging = WaferLogging.WaferLogging()
-        self.dataIngestionLogger = self.waferLogging.getLogger('dataIngesion')
-
 
     def rawDataLocal(self, path):
         """
@@ -74,6 +73,7 @@ class DataIngestion:
             PermissionError: If permission is denied for copying file
             Exception: If any other exception
         """
+        self.dataIngestionLogger = self.waferLogging.getLogger('dataIngesion')
         self.dataIngestionLogger.info('Raw data copying to local path')
         try:
             self.dataIngestionLogger.info('Creating a raw data directory if not exists')
@@ -83,7 +83,7 @@ class DataIngestion:
             self.dataIngestionLogger.info('File copying started')
             for i in files:
                 srcPath = os.path.join(path, i)
-                self.dataIngestionLogger.info(i+" copied to "+str(self.rawData))
+                self.dataIngestionLogger.info(i + " copied to " + str(self.rawData))
                 shutil.copy(srcPath, self.rawData)
             self.dataIngestionLogger.info('File copying completed')
 
@@ -105,30 +105,33 @@ class DataIngestion:
 
         Returns: None
         """
+        self.dataIngestionLogger = self.waferLogging.getLogger('dataIngesion')
         self.dataIngestionLogger.info('Loading data into database')
-        self.dataIngestionLogger.handlers.close()
-        training = self.waferLogging.getLogger('trainingPhase')
+        logger = self.waferLogging.getLogger('trainingPhase')
         try:
-            training.info('File validation started')
+            logger.info('File validation started')
             self.inputValidation.Filevalidation()
-            training.info('File validation ended')
-            training.info('Column validation started')
+            logger = self.waferLogging.getLogger('trainingPhase')
+            logger.info('File validation ended')
+            logger.info('Column validation started')
             self.inputValidation.columnValidation(state)
-            training.info('Column validation ended')
+            logger = self.waferLogging.getLogger('trainingPhase')
+            logger.info('Column validation ended')
             session = self.dbOperations.DBConnection()
-            training.info('Data Insertion into  database started')
+            logger = self.waferLogging.getLogger('trainingPhase')
+            logger.info('Data Insertion into  database started')
             self.dbOperations.insertIntoDB(session, state)
-            training.info('Data Insertion into  database ended')
-            training.info('Raw data folder removed')
+            logger = self.waferLogging.getLogger('trainingPhase')
+            logger.info('Data Insertion into  database ended')
+            logger.info('Raw data folder removed')
             self.utils.removeDir('Data/rawData')
-            training.info('Processed data folder removed')
+            logger.info('Processed data folder removed')
             self.utils.removeDir('Data/processedData')
             session.close()
-            training.handlers.close()
             self.dataIngestionLogger = self.waferLogging.getLogger('dataIngesion')
             self.dataIngestionLogger.info('Loading data into database completed')
         except Exception as e:
-            training.exception(e)
+            logger.exception(e)
 
     def LoadFromDB(self, state):
         """
@@ -136,9 +139,11 @@ class DataIngestion:
 
         Returns: dataframe
         """
+        self.dataIngestionLogger = self.waferLogging.getLogger('dataIngesion')
         self.dataIngestionLogger.info('Loading data from database started')
         session = self.dbOperations.DBConnection()
         dataFrame = self.dbOperations.retrieveFromDB(session, state)
-        self.dataIngestionLogger.info('Loading data into database ended')
+        self.dataIngestionLogger = self.waferLogging.getLogger('dataIngesion')
+        self.dataIngestionLogger.info('Loading data from database ended')
         session.close()
         return dataFrame
