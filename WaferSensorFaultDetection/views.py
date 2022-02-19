@@ -45,11 +45,17 @@ def train(request):
 
             logger.info('Data preprocessing phase started')
             # Null values Imputation
+
             if preProcessing.nullValueCheck(features):
+                logger.info('Imputing missing values using KNN imputer')
                 features = preProcessing.KNNImputer(features, 'training')
+                logger = WaferLogger.getLogger('trainingPhase')
+                logger.info('Missing value imputation completed')
 
             # Removing features with zero variance
+            logger.info('Removing features with zero variance')
             preProcessedData = preProcessing.zerovarcol(features, 'training')
+            logger = WaferLogger.getLogger('trainingPhase')
             logger.info('Data preprocessing phase ended')
 
             logger.info('Model tuner phase started')
@@ -72,29 +78,49 @@ def predict(request):
         preProcessing = PreProcessing.PreProcessing()
         tuner = modeltuner.modelTuner()
         utils = Utils.utils()
+        WaferLogger = WaferLogging.WaferLogging()
+        logger = WaferLogger.getLogger('predictionPhase')
 
         # Copying raw data from Local path to project folder
+        logger.info('Raw data copying to local path started')
         dataingestion.rawDataLocal(path)
+        logger = WaferLogger.getLogger('predictionPhase')
+        logger.info('Raw data copying to local path ended')
 
         # Transferring data to database
-        dataingestion.LoadToDB('predict', None)
+        logger.info('Data Transmission phase from Local to Database started')
+        dataingestion.LoadToDB('predict')
+        logger = WaferLogger.getLogger('trainingPhase')
+        logger.info('Data Transmission phase from Local to Database ended')
 
+        logger.info('Data retrieval phase from database to Local started')
         # Retrieving data from database
         features = dataingestion.LoadFromDB('prediction')
 
+        logger.info('Data preprocessing phase started')
         # Null value imputation
         if preProcessing.nullValueCheck(features):
+            logger.info('Imputing missing values using KNN imputer')
             features = preProcessing.KNNImputer(features, 'prediction')
+            logger = WaferLogger.getLogger('predictionPhase')
+            logger.info('Missing value imputation completed')
 
         # Removing features with null values
+        logger.info('Removing features with zero variance')
         preProcessedData = pd.DataFrame(preProcessing.zerovarcol(features, 'prediction'))
+        logger = WaferLogger.getLogger('predictionPhase')
+        logger.info('Data preprocessing phase ended')
 
+        logger.info('Data Prediction started')
         # Input data prediction
         predicted_data = tuner.predictData(preProcessedData)
-
+        logger = WaferLogger.getLogger('predictionPhase')
+        logger.info('Data Prediction completed')
         # Directory creation for saving output
+        logger.info('Creating output directory')
         utils.dirCheck('output')
 
         # Saving prediction results
+        logger.info('saving prediction results to output directory')
         predicted_data.to_csv('output/predicted_data.csv', index=False)
         return HttpResponse('done')
