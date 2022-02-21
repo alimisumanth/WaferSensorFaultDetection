@@ -43,7 +43,7 @@ class clustering:
         Returns: optimal K value
 
         """
-        logger = self.waferLogger.getLogger('clustering')
+        logger = self.waferLogger.getLogger('Training_clustering')
         logger.info('Finding optimal value of K using KneeLocator method')
         self.wcss = []
         for i in range(1, 11):
@@ -69,7 +69,7 @@ class clustering:
         Returns: clustered dataframe
 
         """
-        logger = self.waferLogger.getLogger('clustering')
+        logger = self.waferLogger.getLogger('Training_clustering')
         logger.info('Data Clustering started')
         k_means = self.find_optimal_k(features)
         k = k_means.knee
@@ -93,7 +93,7 @@ class clustering:
         Returns: clustered data
 
         """
-        logger = self.waferLogger.getLogger('clustering')
+        logger = self.waferLogger.getLogger('Prediction_clustering')
         logger.info('Loading saved Kmeans clustering model')
         kMeans = self.utils.loadModel("KMeans", "clustering/KMeans")
         logger.info('Data is sent to loaded model for creating clusters')

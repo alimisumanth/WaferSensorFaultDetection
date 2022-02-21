@@ -67,7 +67,7 @@ class modelTuner:
         logger.info('Data is sent to KMeans algorithm for clustering')
         self.features = self.clustering.KMeansAlgo(features)
         self.features['labels'] = labels
-        logger = self.waferLogger.getLogger('modelTuner')
+        logger = self.waferLogger.getLogger('Training_modelTuner')
         logger.info('Training clusters with RandomForestClassifier and XGBoostClassifier')
 
         for i in self.features['clusters'].unique():
@@ -79,7 +79,7 @@ class modelTuner:
             x_train, x_test, y_train, y_test = train_test_split(cluster_features, cluster_label, test_size=0.3)
             logger.info('Train data is passed into XGBoostClassifier')
             xgb, XGParams = self.classification.XgBoostClassifier(x_train, y_train)
-            logger = self.waferLogger.getLogger('modelTuner')
+            logger = self.waferLogger.getLogger('Training_modelTuner')
             logger.info('Test data is sent for prediction')
             y_predict = xgb.predict(x_test)
             # if there is only one label in y, then roc_auc_score returns error. We
@@ -95,7 +95,7 @@ class modelTuner:
 
             logger.info('Train data is passed into RandomForestClassifier')
             rf, RFParams = self.classification.RandomForestClassifier(x_train, y_train)
-            logger = self.waferLogger.getLogger('modelTuner')
+            logger = self.waferLogger.getLogger('Training_modelTuner')
             logger.info('sending test data for prediction')
             y_predict = rf.predict(x_test)
             # if there is only one label in y, then roc_auc_score returns error. We
@@ -128,6 +128,8 @@ class modelTuner:
         logger.info('saving scores and params of all clusters')
         self.utils.dumpData(self.scores_path, self.scores)
         self.utils.dumpData(self.params_path, self.params)
+        logger = self.waferLogger.getLogger('trainingPhase')
+        logger.info('Clusters are trained using different models ')
 
     def findModels(self, cluster):
         """
@@ -138,7 +140,7 @@ class modelTuner:
         Returns: Cluster folder name
 
         """
-        logger = self.waferLogger.getLogger('modelTuner')
+        logger = self.waferLogger.getLogger('Prediction_modelTuner')
         logger.info('finding best performing model of a cluster based on id')
         path = 'models/classification'
         for i in os.listdir(path):
@@ -156,11 +158,11 @@ class modelTuner:
         Returns: predicted data
 
         """
-        logger = self.waferLogger.getLogger('modelTuner')
+        logger = self.waferLogger.getLogger('Prediction_modelTuner')
         logger.info('Predicting data')
         logger.info('Get clusters')
         self.clusters = self.clustering.getClusters(features)
-        logger = self.waferLogger.getLogger('modelTuner')
+        logger = self.waferLogger.getLogger('Prediction_modelTuner')
         logger.info('Filtering data based on clusters')
         for i in features['clusters'].unique():
             cluster = features[features['clusters'] == i]

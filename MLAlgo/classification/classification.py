@@ -50,7 +50,7 @@ class WaferClassification:
 
         """
 
-        logger = self.waferlogger.getLogger('classification')
+        logger = self.waferlogger.getLogger('Training_classification')
         logger.info('RandomForestClassification started')
         logger.info('Loading configuration file')
         self.config = self.utils.loadYaml()
@@ -102,7 +102,7 @@ class WaferClassification:
 
 
         """
-        logger = self.waferlogger.getLogger('classification')
+        logger = self.waferlogger.getLogger('Training_classification')
         logger.info('XGBoost classification started')
         logger.info('Loading config file')
         self.config = self.utils.loadYaml()
@@ -142,7 +142,7 @@ class WaferClassification:
         Returns: Predicted data
 
         """
-        logger = self.waferlogger.getLogger('classification')
+        logger = self.waferlogger.getLogger('prediction_classification')
         logger.info(f'Loading {modelName} model for prediction')
         self.model = self.utils.loadModel(modelName)
         logger.info('Data is sent into model for prediction')

@@ -50,18 +50,18 @@ class PreProcessing:
         self.utils = Utils.utils()
         self.waferLogger = WaferLogging.WaferLogging()
 
-    def regexMatching(self):
+    def regexMatching(self, state):
         """
         defines a regex pattern which can be used to match if the file names are as per data sharing agreement or not
 
         :return: regular expression(regex)
         """
-        logger = self.waferLogger.getLogger('preProcessing')
+        logger = self.waferLogger.getLogger(str(state)+'_preProcessing')
         self.regex = "['wafer'|'Wafer']+[\_]+(\d{8}\_)+(\d{6})+\.csv"
         logger.info('file name regex: '+self.regex)
         return self.regex
 
-    def nullValueCheck(self, df):
+    def nullValueCheck(self, df, state):
         """
         Checks for null values in dataframe
 
@@ -69,7 +69,7 @@ class PreProcessing:
 
         Returns: Boolean value: if number of null columns is greater than 0 return True else return False
         """
-        logger = self.waferLogger.getLogger('preProcessing')
+        logger = self.waferLogger.getLogger(str(state)+'_preProcessing')
         nullColumns = [(i, df[i].isnull().sum()) for i in df.columns if df[i].isnull().sum() > 0]
         logger.info('Number of columns with Null values: '+str(len(nullColumns)))
         return len(nullColumns) > 0
@@ -84,7 +84,7 @@ class PreProcessing:
 
         Returns: Return a new dataframe whose null values are imputed by KNN Imputer
         """
-        logger = self.waferLogger.getLogger('preProcessing')
+        logger = self.waferLogger.getLogger(str(state)+'_preProcessing')
         if state == 'training':
             cols = [i for i in df.columns if df[i].dtypes != 'object']
             logger.info('columns with null values: '+' ,'.join(cols))
@@ -114,7 +114,7 @@ class PreProcessing:
 
         Returns: return features which are having non-zero variance
         """
-        logger = self.waferLogger.getLogger('preProcessing')
+        logger = self.waferLogger.getLogger(str(state)+'_preProcessing')
         logger.info('Removing features with zero variance')
         if state == 'training':
             vt = VarianceThreshold(threshold=0)

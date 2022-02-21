@@ -160,3 +160,22 @@ class utils:
         except Exception as e:
             print(str(e))
         return model
+
+    def archiveData(self, src):
+
+        try:
+            for i in src:
+                filePath = os.path.join(src, i)
+                shutil.move(filePath, 'Data/archivedData')
+        # This exception is raised when a system function returns a system - related error.
+        except OSError as error:
+            print(error)
+
+        # Exception if both source and destination files are same
+        except shutil.SameFileError:
+            print("Source and destination represents the same file.")
+
+        # For other errors
+        except Exception as e:
+            print("Error occurred while copying file.", e)
+

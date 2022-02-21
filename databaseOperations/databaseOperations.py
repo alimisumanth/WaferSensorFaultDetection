@@ -61,14 +61,14 @@ class Database:
         self.session = None
         self.processedData = 'Data/processedData'
 
-    def DBConnection(self):
+    def DBConnection(self, state):
         """
         Creates a new sqlite database connection to db.sqlite3 database
         Returns: sqlite object
         Raises: sqlite3 error
         """
         # creating a new database connection
-        self.dbLogger = self.waferLogger.getLogger('dbLogger')
+        self.dbLogger = self.waferLogger.getLogger(str(state)+'_dbLogger')
         try:
             self.dbLogger.info('Creating a Database connection')
             self.session = sqlite3.connect('db.sqlite3')
@@ -93,7 +93,7 @@ class Database:
         Returns: None
 
         """
-        self.dbLogger = self.waferLogger.getLogger('dbLogger')
+        self.dbLogger = self.waferLogger.getLogger(str(state)+'_dbLogger')
         self.dbLogger.info("Inserting processedData into database")
         self.dbLogger.info("Inserting processedData into database")
         self.utils.dirCheck(self.processedData)
@@ -126,7 +126,7 @@ class Database:
 
         Returns: wafer data from database(dataframe)
         """
-        self.dbLogger = self.waferLogger.getLogger('dbLogger')
+        self.dbLogger = self.waferLogger.getLogger(str(state)+'_dbLogger')
         try:
             if state == 'training':
                 self.dbLogger.info('Retrieving data from wafer_train table')
